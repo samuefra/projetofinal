@@ -97,7 +97,7 @@ clean.text = function(x)
   return(x)
 }
 
-#aplicando clean text e plotando por horas
+#aplicando clean text 
 cleanText <- clean.text(tweets.txt)
 idx <- which(cleanText == " ")
 cleanText <- cleanText[cleanText != " "]
@@ -109,21 +109,9 @@ tweets.df %<>%
       # Parse date.
       parse_date_time(orders = '%y-%m-%d %H%M%S')
   )
-tweets.df %<>% 
-  mutate(Created_At_Round = created%>% round(units = 'hours') %>% as.POSIXct())
 
-tweets.df %>% pull(created) %>% min()
-tweets.df %>% pull(created) %>% max()
-plt <- tweets.df %>% 
-  dplyr::count(Created_At_Round) %>% 
-  ggplot(mapping = aes(x = Created_At_Round, y = n)) +
-  theme_light() +
-  geom_line() +
-  xlab(label = 'Date') +
-  ylab(label = NULL) +
-  ggtitle(label = 'Number of Tweets per Hour')
 
-plt %>% ggplotly()
+
 
 ##cloud
 text_corpus <- Corpus(VectorSource(cleanText))
@@ -140,13 +128,14 @@ wordcloud(text_corpus, min.freq = 1, max.words = 100, scale = c(3.1,1),
 ###frquency
 ggplot(tdm[1:20,], aes(x=reorder(word, freq), y=freq)) + 
   geom_bar(stat="identity") +
-  xlab("Terms") + 
-  ylab("Count") + 
+  xlab("Termos") + 
+  ylab("frequência") + 
   coord_flip() +
   theme(axis.text=element_text(size=7)) +
-  ggtitle('termos mais frequentes') +
+  ggtitle('Termos mais frequentes') +
   ggeasy::easy_center_title()
 ## bigram
+
 bi.gram.words <- tweets.df %>% 
   unnest_tokens(
     input = text, 
@@ -159,11 +148,10 @@ bi.gram.words <- tweets.df %>%
 bi.gram.words %>% 
   select(bigram) %>% 
   head(10)
-
 extra.stop.words <- c('https')
 stopwords.df <- tibble(
   word = c(stopwords(kind = 'es'),
-           stopwords(kind = 'en'),
+           stopwords(kind = 'pt'),
            extra.stop.words)
 )
 
@@ -178,20 +166,10 @@ bi.gram.count <- bi.gram.words %>%
   dplyr::count(word1, word2, sort = TRUE) %>% 
   dplyr::rename(weight = n)
 
-bi.gram.count %>% head()
+bi.gram.count <- bi.gram.count%>%head(10)
+save(bi.gram.count,file = "bigram.rds")
 
-bi.gram.count %>% 
-  ggplot(mapping = aes(x = weight)) +
-  theme_light() +
-  geom_histogram() +
-  labs(title = "Bigram Weight Distribution")
 
-bi.gram.count %>% 
-  mutate(weight = log(weight + 1)) %>% 
-  ggplot(mapping = aes(x = weight)) +
-  theme_light() +
-  geom_histogram() +
-  labs(title = "Bigram log-Weight Distribution")
 
 threshold <- 1200
 
@@ -229,7 +207,7 @@ plot(
   alpha = 50
 )
 
-threshold <- 1600
+threshold <- 1800
 
 network <-  bi.gram.count %>%
   filter(weight > threshold) %>%
@@ -256,14 +234,13 @@ forceNetwork(
   Target = 'target',
   NodeID = 'name',
   Group = 'Group', 
-  opacity = 0.9,
+  opacity = 0.7,
   Value = 'Width',
   Nodesize = 'Degree', 
   # We input a JavaScript function.
   linkWidth = JS("function(d) { return Math.sqrt(d.value); }"), 
   fontSize = 10,
-  zoom = TRUE, 
-  opacityNoHover = 1
+  opacityNoHover = 20
 )
 
 positive = scan("D:/documentos/rstudio/projetofinal/positive_words_pt.txt", what = 'character', comment.char = ';')
