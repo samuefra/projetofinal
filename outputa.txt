@@ -1,0 +1,4 @@
+Sentiment,Count
+Positivo,829
+Neutro,2208
+Negativo,1953
