@@ -349,7 +349,8 @@ write.table(output, file = "output.txt", sep = ",", quote = FALSE, row.names = F
 write.table(outputa, file = "outputa.txt", sep = ",", quote = FALSE, row.names = F)
 write.table(outputd, file = "outputd.txt", sep = ",", quote = FALSE, row.names = F)
 #saving datasets
-
-
+save(tweets,file="tweets.Rda")
+save(tweetsantes, file ="tweetsantes.Rda")
+save(tweetsdepois, file ="tweetsdepois.Rda")
 
 
