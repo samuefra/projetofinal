@@ -50,21 +50,23 @@ library(magrittr)
 library(tidyverse)
 library(janeaustenr)
 library(widyr)
-#configurando API do twitter
-api_key <- "zbYQsOb0jFp3XiN3Wxzho4Cb4"
-api_secret <- "tEbDcHwdRsa4AVb5XSKcdc0Cmj659dNi0Q3MpEJwBnzhOUpjPO"
-access_token <- "1496765351215964161-OUdq8uwksz01Bm1rKPfT0ug0NuGlhX"
-access_token_secret <- "l7dBK3KMtOFrDyCzL7welnS8yZgpBmR0qSb8raukA3J3m"
+#configurando API do twitter retirada 
+api_key <- "retirada por segurança"
+api_secret <- "retirada por segurança"
+access_token <- "retirada por segurança"
+access_token_secret <- "retirada por segurança"
 setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
 
 #obtendo tweets em portugues contendo bolsonaro e russia
-tweets <- searchTwitter("Bolsonaro russia", n=10000, lang="pt")
+### codigo para pegar os tweets:   tweets <- searchTwitter("Bolsonaro russia", n=10000, lang="pt")
+load("tweets.Rda")
 n.tweets <- length(tweets)
 tweets.df <- twListToDF(tweets)
 tweets.txt <- sapply(tweets, function(t)t$getText())
 
 ##### tweets contendo Bolsonaro pré- invasão
-tweetsantes <- searchTwitter("Bolsonaro", n=5000, lang="pt",since ="2022-02-10" ,until = "2022-02-22"  )
+### codigo para pegar os tweets: tweetsantes <- searchTwitter("Bolsonaro", n=5000, lang="pt",since ="2022-02-10" ,until = "2022-02-22"  )
+load("tweetsantes.Rda")
 n.tweetsa <- length(tweetsantes)
 tweetsantes.df <- twListToDF(tweetsantes)
 tweetsantes.txt <- sapply(tweetsantes, function(t)t$getText())
@@ -83,7 +85,8 @@ tweets.df %>% pull(created) %>% min()
 
 tweets.df %>% pull(created) %>% max()
 ##pós invasão 
-tweetsdepois <- searchTwitter("Bolsonaro", n=5000, lang="pt" )
+### codigo para pegar os tweets:tweetsdepois <- searchTwitter("Bolsonaro", n=5000, lang="pt" )
+load("tweetsdepois.Rda")
 n.tweetsdepois <- length(tweetsdepois)
 tweetsdepois.df <- twListToDF(tweetsdepois)
 tweetsdepois.txt <- sapply(tweetsdepois, function(t)t$getText())
@@ -349,8 +352,5 @@ write.table(output, file = "output.txt", sep = ",", quote = FALSE, row.names = F
 write.table(outputa, file = "outputa.txt", sep = ",", quote = FALSE, row.names = F)
 write.table(outputd, file = "outputd.txt", sep = ",", quote = FALSE, row.names = F)
 #saving datasets
-save(tweets,file="tweets.Rda")
-save(tweetsantes, file ="tweetsantes.Rda")
-save(tweetsdepois, file ="tweetsdepois.Rda")
 
 
