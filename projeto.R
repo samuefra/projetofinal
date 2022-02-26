@@ -1,42 +1,9 @@
-install.packages("rtweet")
-install.packages("twitteR")
-install.packages("ROAuth")
-install.packages("hms")
-install.packages("lubridate") 
-install.packages("tidytext")
-install.packages("tm")
-install.packages("wordcloud")
-install.packages("igraph")
-install.packages("glue")
-install.packages("networkD3")
-install.packages("plyr")
-install.packages("stringr")
-install.packages("ggplot2")
-install.packages("ggeasy")
-install.packages("plotly")
-install.packages("dplyr")  
-install.packages("magrittr")
-install.packages("tidyverse")
-install.packages("janeaustenr")
-install.packages("widyr")
-install.packages("httr")
-install.packages("lattice")
-install.packages("naivebayes")
-install.packages("lexiconPT")
-library(lexiconPT)
-library(naivebayes)
-library(lattice)
-library(httr)
 library(twitteR)
 library(ROAuth)
-library(hms)
-library(lubridate) 
 library(tidytext)
 library(tm)
 library(wordcloud)
-library(igraph)
 library(glue)
-library(networkD3)
 library(rtweet)
 library(plyr)
 library(stringr)
@@ -50,23 +17,16 @@ library(magrittr)
 library(tidyverse)
 library(janeaustenr)
 library(widyr)
-#configurando API do twitter retirada 
-api_key <- "retirada por segurança"
-api_secret <- "retirada por segurança"
-access_token <- "retirada por segurança"
-access_token_secret <- "retirada por segurança"
-setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
-
-#obtendo tweets em portugues contendo bolsonaro e russia
-### codigo para pegar os tweets:   tweets <- searchTwitter("Bolsonaro russia", n=10000, lang="pt")
 load("tweets.Rda")
+load("tweetsantes.Rda")
+load("tweetsdepois.Rda")
+
+#prepatando bases
 n.tweets <- length(tweets)
 tweets.df <- twListToDF(tweets)
 tweets.txt <- sapply(tweets, function(t)t$getText())
 
-##### tweets contendo Bolsonaro pré- invasão
-### codigo para pegar os tweets: tweetsantes <- searchTwitter("Bolsonaro", n=5000, lang="pt",since ="2022-02-10" ,until = "2022-02-22"  )
-load("tweetsantes.Rda")
+##### tweets contendo Bolsonaro pré- invasão 10 a 22 de fevereiro
 n.tweetsa <- length(tweetsantes)
 tweetsantes.df <- twListToDF(tweetsantes)
 tweetsantes.txt <- sapply(tweetsantes, function(t)t$getText())
@@ -85,8 +45,6 @@ tweets.df %>% pull(created) %>% min()
 
 tweets.df %>% pull(created) %>% max()
 ##pós invasão 
-### codigo para pegar os tweets:tweetsdepois <- searchTwitter("Bolsonaro", n=5000, lang="pt" )
-load("tweetsdepois.Rda")
 n.tweetsdepois <- length(tweetsdepois)
 tweetsdepois.df <- twListToDF(tweetsdepois)
 tweetsdepois.txt <- sapply(tweetsdepois, function(t)t$getText())
@@ -208,6 +166,7 @@ wordcloud(text_corpusd, min.freq = 10, max.words = 200, scale = c(2,0.5,0.25),
 
 
 ###frquency com russia
+dev.off()
 ggplot(tdm[1:20,], aes(x=reorder(word, freq), y=freq)) + 
   geom_bar(stat="identity") +
   xlab("Termos") + 
@@ -216,9 +175,10 @@ ggplot(tdm[1:20,], aes(x=reorder(word, freq), y=freq)) +
   theme(axis.text=element_text(size=7)) +
   ggtitle('Termos mais frequentes') +
   ggeasy::easy_center_title()
+ggsave("freqcom.png")
 
 ###frquency antes
-
+dev.off()
 ggplot(tdma[1:20,], aes(x=reorder(word, freq), y=freq)) + 
   geom_bar(stat="identity") +
   xlab("Termos") + 
@@ -227,9 +187,9 @@ ggplot(tdma[1:20,], aes(x=reorder(word, freq), y=freq)) +
   theme(axis.text=element_text(size=7)) +
   ggtitle('Termos mais frequentes antes da invasão') +
   ggeasy::easy_center_title()
-
+ggsave("freqantes.png")
 ###frquency depois
-
+dev.off()
 ggplot(tdmd[1:20,], aes(x=reorder(word, freq), y=freq)) + 
   geom_bar(stat="identity") +
   xlab("Termos") + 
@@ -238,10 +198,12 @@ ggplot(tdmd[1:20,], aes(x=reorder(word, freq), y=freq)) +
   theme(axis.text=element_text(size=7)) +
   ggtitle('Termos mais frequentes depois da invasão') +
   ggeasy::easy_center_title()
-
+ggsave("freqdepois.png")
 ###começo da analise de sentimentos
-positive = scan("D:/documentos/rstudio/projetofinal/positive_words_pt.txt", what = 'character', comment.char = ';')
-negative = scan("D:/documentos/rstudio/projetofinal/negative_words_pt.txt", what = 'character', comment.char = ';')
+load("positive.rda")
+load("negative.rda")
+
+
 
 score.sentiment = function(sentences, pos.words, neg.words, .progress='none')
 {
@@ -282,6 +244,7 @@ table(analysisa$score)
 analysisd <- score.sentiment(cleanTextd, positive, negative)
 table(analysisd$score)
 ###grafico de analise de senteimentos
+dev.off()
 analysis %>%
   ggplot(aes(x=score)) + 
   geom_histogram(binwidth = 1, fill = "black")+ 
@@ -289,6 +252,7 @@ analysis %>%
   xlab("score de sentimentos") +
   ggtitle("Distribuição de sentimentos por tweet") +
   ggeasy::easy_center_title()
+ggsave("sentimentocom.png")
 ##antes
 dev.off()
 analysisa %>%
@@ -298,7 +262,9 @@ analysisa %>%
   xlab("score de sentimentos") +
   ggtitle("Distribuição de sentimentos por tweet, antes da invasão") +
   ggeasy::easy_center_title()
+ggsave("sentimentoantes.png")
 ##depois
+dev.off()
 analysisd %>%
   ggplot(aes(x=score)) + 
   geom_histogram(binwidth = 1, fill = "black")+ 
@@ -306,8 +272,9 @@ analysisd %>%
   xlab("score de sentimentos") +
   ggtitle("Distribuição de sentimentos por tweet, depois da invasão") +
   ggeasy::easy_center_title()
+ggsave("sentimentodepois.png")
 ###sentimento barplot 
-
+dev.off()
 neutral <- length(which(analysis$score == 0))
 positive <- length(which(analysis$score > 0))
 negative <- length(which(analysis$score < 0))
@@ -320,8 +287,10 @@ ggplot(output, aes(x=Sentiment,y=Count))+
   ylab("Frequência") + 
   xlab("Score de sentimentos") +
   ggtitle("Barplot de sentimentos")
+ggsave("barplotcom.png")
 
 #antes da invasão
+dev.off()
 neutrala <- length(which(analysisa$score == 0))
 positivea <- length(which(analysisa$score > 0))
 negativea <- length(which(analysisa$score < 0))
@@ -334,7 +303,10 @@ ggplot(outputa, aes(x=Sentiment,y=Count))+
   ylab("Frequência") + 
   xlab("Score de sentimentos") +
   ggtitle("Barplot de sentimentos, antes da invasão")
+ggsave("barplotantes.png")
+
 ##depois da invasão
+dev.off()
 neutrald <- length(which(analysisd$score == 0))
 positived <- length(which(analysisd$score > 0))
 negatived <- length(which(analysisd$score < 0))
@@ -347,10 +319,8 @@ ggplot(outputd, aes(x=Sentiment,y=Count))+
   ylab("Frequência") + 
   xlab("Score de sentimentos") +
   ggtitle("Barplot de sentimentos, depois da invasão")
+ggsave("barplotdepois.png")
 #table
 write.table(output, file = "output.txt", sep = ",", quote = FALSE, row.names = F)
 write.table(outputa, file = "outputa.txt", sep = ",", quote = FALSE, row.names = F)
 write.table(outputd, file = "outputd.txt", sep = ",", quote = FALSE, row.names = F)
-
-
-
