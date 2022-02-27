@@ -1,10 +1,8 @@
-library(twitteR)
 library(ROAuth)
 library(tidytext)
 library(tm)
 library(wordcloud)
 library(glue)
-library(rtweet)
 library(plyr)
 library(stringr)
 library(ggplot2)
@@ -16,39 +14,48 @@ library(magrittr)
 library(tidyverse)
 library(janeaustenr)
 library(widyr)
-load("tweets.Rda")
-load("tweetsantes.Rda")
-load("tweetsdepois.Rda")
-
+##trechos retirados por causa do API e para reduzir o tempo de rodar os dados sem prejuizo ao output
+####bases loadadas foram retiradas da seguinte forma:
+#####api_key <- "xxxxxxxxxxxxxxxxxxxxxxxxx"
+####api_secret <- "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+#####access_token <- "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+#####access_token_secret <- "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+####setup_twitter_oauth(api_key,api_secret,access_token,access_token_secret)
+###tweets <- searchTwitter("Bolsonaro russia", n=10000, lang="pt")
+###tweetsantes <- searchTwitter("Bolsonaro", n=5000, lang="pt",since='2022-02-22', until='2022-02-24')
+###tweetsdepois <- searchTwitter("Bolsonaro", n=5000, lang="pt") n�o foi necessario usar tempos pq chegava em 5k depois do dia 25
 #prepatando bases
-n.tweets <- length(tweets)
-tweets.df <- twListToDF(tweets)
-tweets.txt <- sapply(tweets, function(t)t$getText())
+
+
+#n.tweets <- length(tweets)
+#tweets.df <- twListToDF(tweets)
+#tweets.txt <- sapply(tweets, function(t)t$getText())
 
 ##### tweets contendo Bolsonaro pré- invasão 10 a 22 de fevereiro
-n.tweetsa <- length(tweetsantes)
-tweetsantes.df <- twListToDF(tweetsantes)
-tweetsantes.txt <- sapply(tweetsantes, function(t)t$getText())
+#n.tweetsa <- length(tweetsantes)
+#tweetsantes.df <- twListToDF(tweetsantes)
+#tweetsantes.txt <- sapply(tweetsantes, function(t)t$getText())
 #### checando horario se +10000 tweets depois da invasão não preciso usar since e until
-tweets.df %<>% 
-  mutate(
-    created = created %>% 
-      str_remove_all(pattern = '\\+0000') %>%
-      parse_date_time(orders = '%y-%m-%d %H%M%S')
-  )
+#tweets.df %<>% 
+ # mutate(
+  #  created = created %>% 
+   #   str_remove_all(pattern = '\\+0000') %>%
+    #  parse_date_time(orders = '%y-%m-%d %H%M%S')
+  
 
-tweets.df %<>% 
-  mutate(Created_At_Round = created%>% round(units = 'hours') %>% as.POSIXct())
+#tweets.df %<>% 
+ # mutate(Created_At_Round = created%>% round(units = 'hours') %>% as.POSIXct())
 
-tweets.df %>% pull(created) %>% min()
+#tweets.df %>% pull(created) %>% min()
 
-tweets.df %>% pull(created) %>% max()
+#tweets.df %>% pull(created) %>% max()
 ##pós invasão 
-n.tweetsdepois <- length(tweetsdepois)
-tweetsdepois.df <- twListToDF(tweetsdepois)
-tweetsdepois.txt <- sapply(tweetsdepois, function(t)t$getText())
-
-
+#n.tweetsdepois <- length(tweetsdepois)
+#tweetsdepois.df <- twListToDF(tweetsdepois)
+#tweetsdepois.txt <- sapply(tweetsdepois, function(t)t$getText())
+load("ttxt.rda")
+load("ttxta.rda")
+load("ttxtd.rda")
 # função limpando os tweets
 clean.text = function(x)
 {
@@ -85,40 +92,17 @@ clean.text = function(x)
 cleanText <- clean.text(tweets.txt)
 idx <- which(cleanText == " ")
 cleanText <- cleanText[cleanText != " "]
-tweets.df %<>% 
-  mutate(
-    created = created %>% 
-      # Remove zeros.
-      str_remove_all(pattern = '\\+0000') %>%
-      # Parse date.
-      parse_date_time(orders = '%y-%m-%d %H%M%S')
-  )
+
 #aplicando clean text antes da invasão
 cleanTexta <- clean.text(tweetsantes.txt)
 idy <- which(cleanTexta == " ")
 cleanTexta <- cleanTexta[cleanTexta != " "]
-tweetsantes.df %<>% 
-  mutate(
-    created = created %>% 
-      # Remove zeros.
-      str_remove_all(pattern = '\\+0000') %>%
-      # Parse date.
-      parse_date_time(orders = '%y-%m-%d %H%M%S')
-  )
+
 
 #aplicando clean text depois da invasão
 cleanTextd <- clean.text(tweetsdepois.txt)
 idz <- which(cleanTextd == " ")
 cleanTextd <- cleanTextd[cleanTexta != " "]
-tweetsdepois.df %<>% 
-  mutate(
-    created = created %>% 
-      # Remove zeros.
-      str_remove_all(pattern = '\\+0000') %>%
-      # Parse date.
-      parse_date_time(orders = '%y-%m-%d %H%M%S')
-  )
-
 
 
 
@@ -126,20 +110,19 @@ tweetsdepois.df %<>%
 text_corpus <- Corpus(VectorSource(cleanText))
 text_corpus <- tm_map(text_corpus, content_transformer(tolower))
 text_corpus <- tm_map(text_corpus, function(x)removeWords(x,stopwords("portuguese")))
-text_corpus <- tm_map(text_corpus, removeWords, c("messias" , "jair", "rússia","bolsonaro", "brasileiros", "brasil", "que", "foi", "para", "rú", "rúss" ))
+text_corpus <- tm_map(text_corpus, removeWords, c("messias" , "jair", "r�ssia","bolsonaro", "brasileiros", "brasil", "que", "foi", "para", "rú", "rúss" ))
 tdm <- TermDocumentMatrix(text_corpus)
 tdm <- as.matrix(tdm)
 tdm <- sort(rowSums(tdm), decreasing = TRUE)
 tdm <- data.frame(word = names(tdm), freq = tdm)
 set.seed(113)
-dev.off()
 wordcloud(text_corpus, min.freq = 10, max.words = 200, scale = c(2,0.5,0.25),
           colors=brewer.pal(7, "Dark2"), random.color = T, random.order = F)
 #cloud antes
 text_corpusa <- Corpus(VectorSource(cleanTexta))
 text_corpusa <- tm_map(text_corpusa, content_transformer(tolower))
 text_corpusa <- tm_map(text_corpusa, function(x)removeWords(x,stopwords("portuguese")))
-text_corpusa <- tm_map(text_corpusa, removeWords, c("messias" , "jair","rússia","bolsonaro", "brasileiros", "brasil", "que", "foi", "para", "rú", "rúss"))
+text_corpusa <- tm_map(text_corpusa, removeWords, c("messias" , "jair","r�ssia","bolsonaro", "brasileiros", "brasil", "que", "foi", "para", "rú", "rúss"))
 tdma <- TermDocumentMatrix(text_corpusa)
 tdma <- as.matrix(tdma)
 tdma <- sort(rowSums(tdma), decreasing = TRUE)
@@ -169,7 +152,7 @@ dev.off()
 ggplot(tdm[1:20,], aes(x=reorder(word, freq), y=freq)) + 
   geom_bar(stat="identity") +
   xlab("Termos") + 
-  ylab("frequência") + 
+  ylab("frequ�ncia") + 
   coord_flip() +
   theme(axis.text=element_text(size=7)) +
   ggtitle('Termos mais frequentes') +
@@ -181,7 +164,7 @@ dev.off()
 ggplot(tdma[1:20,], aes(x=reorder(word, freq), y=freq)) + 
   geom_bar(stat="identity") +
   xlab("Termos") + 
-  ylab("frequência") + 
+  ylab("frequ�ncia") + 
   coord_flip() +
   theme(axis.text=element_text(size=7)) +
   ggtitle('Termos mais frequentes antes da invasão') +
@@ -192,7 +175,7 @@ dev.off()
 ggplot(tdmd[1:20,], aes(x=reorder(word, freq), y=freq)) + 
   geom_bar(stat="identity") +
   xlab("Termos") + 
-  ylab("frequência") + 
+  ylab("frequ�ncia") + 
   coord_flip() +
   theme(axis.text=element_text(size=7)) +
   ggtitle('Termos mais frequentes depois da invasão') +
@@ -233,7 +216,7 @@ score.sentiment = function(sentences, pos.words, neg.words, .progress='none')
   scores.df = data.frame(score=scores, text=sentences)
   return(scores.df)
 }
-##### agora aplicando a função score para cada uma
+##### agora aplicando a fun��o score para cada uma
 analysis <- score.sentiment(cleanText, positive, negative)
 table(analysis$score)
 # antes
@@ -247,9 +230,9 @@ dev.off()
 analysis %>%
   ggplot(aes(x=score)) + 
   geom_histogram(binwidth = 1, fill = "black")+ 
-  ylab("Frequência") + 
+  ylab("Frequ�ncia") + 
   xlab("score de sentimentos") +
-  ggtitle("Distribuição de sentimentos por tweet") +
+  ggtitle("Distribui��o de sentimentos por tweet") +
   ggeasy::easy_center_title()
 ggsave("sentimentocom.png")
 ##antes
@@ -257,9 +240,9 @@ dev.off()
 analysisa %>%
   ggplot(aes(x=score)) + 
   geom_histogram(binwidth = 1, fill = "black")+ 
-  ylab("Frequência") + 
+  ylab("Frequ�ncia") + 
   xlab("score de sentimentos") +
-  ggtitle("Distribuição de sentimentos por tweet, antes da invasão") +
+  ggtitle("Distribui��o de sentimentos por tweet, antes da invasão") +
   ggeasy::easy_center_title()
 ggsave("sentimentoantes.png")
 ##depois
@@ -267,9 +250,9 @@ dev.off()
 analysisd %>%
   ggplot(aes(x=score)) + 
   geom_histogram(binwidth = 1, fill = "black")+ 
-  ylab("Frequência") + 
+  ylab("Frequ�ncia") + 
   xlab("score de sentimentos") +
-  ggtitle("Distribuição de sentimentos por tweet, depois da invasão") +
+  ggtitle("Distribui��o de sentimentos por tweet, depois da invasão") +
   ggeasy::easy_center_title()
 ggsave("sentimentodepois.png")
 ###sentimento barplot 
@@ -283,7 +266,7 @@ output <- data.frame(Sentiment,Count)
 output$Sentiment<-factor(output$Sentiment,levels=Sentiment)
 ggplot(output, aes(x=Sentiment,y=Count))+
   geom_bar(stat = "identity", aes(fill = Sentiment))+
-  ylab("Frequência") + 
+  ylab("Frequ�ncia") + 
   xlab("Score de sentimentos") +
   ggtitle("Barplot de sentimentos")
 ggsave("barplotcom.png")
@@ -299,7 +282,7 @@ outputa <- data.frame(Sentiment,Count)
 outputa$Sentiment<-factor(outputa$Sentiment,levels=Sentiment)
 ggplot(outputa, aes(x=Sentiment,y=Count))+
   geom_bar(stat = "identity", aes(fill = Sentiment))+
-  ylab("Frequência") + 
+  ylab("Frequ�ncia") + 
   xlab("Score de sentimentos") +
   ggtitle("Barplot de sentimentos, antes da invasão")
 ggsave("barplotantes.png")
@@ -315,7 +298,7 @@ outputd <- data.frame(Sentiment,Count)
 outputd$Sentiment<-factor(outputd$Sentiment,levels=Sentiment)
 ggplot(outputd, aes(x=Sentiment,y=Count))+
   geom_bar(stat = "identity", aes(fill = Sentiment))+
-  ylab("Frequência") + 
+  ylab("Frequ�ncia") + 
   xlab("Score de sentimentos") +
   ggtitle("Barplot de sentimentos, depois da invasão")
 ggsave("barplotdepois.png")
